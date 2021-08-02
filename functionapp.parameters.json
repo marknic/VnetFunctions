@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "appName": {
+            "value": "mnfuncapp"
+        },
+        "location": {
+            "value": "eastus" 
+        },
+        "appComputeSkuName": {
+            "value": "EP2"
+        },
+        "storageSkuName": {
+            "value": "Standard_LRS"
+        },
+        "runtime": {
+            "value": "node"
+        },
+        "logAnalyticsWsId":{
+            "value": "/subscriptions/e752c181-7a2c-4de5-b16b-b3288ed54e42/resourcegroups/loganalytics-workspaces-rg/providers/microsoft.operationalinsights/workspaces/mn-logging-workspace-law"
+        }
+    }
+}
