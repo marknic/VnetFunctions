@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resourceTags": {
+      "value": {
+        "DeptName": "Innovation",
+        "LOB": "Innovation",
+        "EntType": "dev",
+        "DeployDate": "01/01/1970",
+        "Deployer": "Mark Nichols",
+        "Sensitivity": "NonSensitive",
+        "SenType": "Not Applicable",
+        "SubDivision": "Innovation",
+        "Department": "Innovation",
+        "CostCenter": "IT Innovation 1234",
+        "CostCode": "1234567890"
+      }
+    },
+    "appEnvironment": {
+      "value": "Dev"
+    },
+    "prefix":{
+      "value": "mn"
+    },
+    "suffix":{
+      "value": "01"
+    },
+    "appName":{
+      "value": "privatefunc"
+    },
+    "subnets": {
+      "value": [
+        {
+          "name": "sn-util-0-0-24",
+          "properties": {
+            "addressPrefix": "10.4.0.0/24"
+          }
+        },
+        {
+          "name": "sn-util-1-0-24",
+          "properties": {
+            "addressPrefix": "10.4.1.0/24"
+          }
+        },
+        {
+          "name": "sn-util-2-0-24",
+          "properties": {
+            "addressPrefix": "10.4.2.0/24",
+            "privateLinkServiceNetworkPolicies": "Disabled",
+            "privateEndpointNetworkPolicies": "Disabled"
+          }
+        },
+        {
+          "name": "sn-func-3-0-27-d",
+          "properties": {
+            "addressPrefix": "10.4.3.0/27",
+            "delegations": [
+              {
+                "name": "delegation",
+                "properties": {
+                  "serviceName": "Microsoft.Web/serverFarms"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

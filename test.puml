@@ -1,0 +1,40 @@
+@startuml azure
+footer Kubernetes Plant-UML
+scale max 1024 width
+skinparam linetype polyline
+skinparam nodesep 10
+skinparam ranksep 10
+
+
+
+' Azure
+!define AzurePuml https://raw.githubusercontent.com/RicardoNiepel/Azure-PlantUML/release/2-1/dist
+
+!includeurl AzurePuml/AzureCommon.puml
+!includeurl AzurePuml/AzureSimplified.puml
+
+!includeurl AzurePuml/Compute/AzureAppService.puml
+
+!includeurl AzurePuml/DevOps/AzurePipelines.puml
+!includeurl AzurePuml/Identity/AzureActiveDirectory.puml
+!includeurl AzurePuml/Networking/AzureLoadBalancer.puml
+!includeurl AzurePuml/Security/AzureKeyVault.puml
+!includeurl AzurePuml/Storage/AzureStorage.puml
+!includeurl AzurePuml/Compute/AzureFunction.puml
+
+!includeurl AzurePuml/Networking/AzureApplicationGateway.puml
+!includeurl AzurePuml/Networking/AzureVirtualNetwork.puml
+
+' Kubernetes
+
+
+
+' Azure Components
+AzureActiveDirectory(aad, "\nAzure\nActive Directory", "Global")
+AzureKeyVault(keyvault, "\nAzure\nKey Vault", "Global")
+AzureStorage(fstore, "Function\nOperational\nStore", "East US 2")
+AzureFunction(func01, "Premium\nFunctions", "East US 2")
+
+
+
+@enduml
