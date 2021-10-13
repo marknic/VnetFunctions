@@ -1,7 +1,7 @@
 param privateEndpointName string
 param vnetName string
 param subnetName string
-param storageAccountId string
+param serviceId string
 param tags object
 
 @allowed([
@@ -9,6 +9,7 @@ param tags object
   'table'
   'blob'
   'queue'
+  'function'
 ])
 param groupId string
 
@@ -25,7 +26,7 @@ resource storageFilePrivateEndpoint 'Microsoft.Network/privateEndpoints@2021-02-
       {
         name: 'MyStorageFilePrivateLinkConnection'
         properties: {
-          privateLinkServiceId: storageAccountId
+          privateLinkServiceId: serviceId
           groupIds: [
             groupId
           ]

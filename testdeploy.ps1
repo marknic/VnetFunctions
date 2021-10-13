@@ -1,3 +1,4 @@
 $resourceGroupName = "Functions-In-A-Vnet-RG"
 
-az deployment group create -g $resourceGroupName --template-file '.\test.bicep'
+$result = $(az deployment group create -g $resourceGroupName --template-file '.\modules\storageaccount_test.bicep')
+

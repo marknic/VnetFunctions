@@ -12,7 +12,7 @@ module endpoint1 'modules/privateendpoint.bicep' = {
   params: {
     groupId: 'blob'
     privateEndpointName: privateEndpointStorageBlobName
-    storageAccountId: storageAccountId
+    serviceId: storageAccountId
     subnetName: subnetName
     tags: tags
     vnetName: vnetName
@@ -24,7 +24,7 @@ module endpoint2 'modules/privateendpoint.bicep' = {
   params: {
     groupId: 'file'
     privateEndpointName: privateEndpointStorageFileName
-    storageAccountId: storageAccountId
+    serviceId: storageAccountId
     subnetName: subnetName
     tags: tags
     vnetName: vnetName

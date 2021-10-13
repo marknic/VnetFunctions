@@ -17,6 +17,11 @@ param suffix string
 @maxLength(12)
 param appName string
 
+@description('Subscription ID (GUID)')
+param subscriptionId string
+
+@description('Resource Group Name')
+param resourceGroupName string
 
 @allowed([
   'Dev'
@@ -29,65 +34,36 @@ param appEnvironment string
 
 param location string = resourceGroup().location
 
-var dashName = '${appEnvironment}-${prefix}-${appName}-${suffix}'
+param functionSubnetName string
+
+var dashName = toLower('${appEnvironment}-${prefix}-${appName}-${suffix}')
 var nodashName = toLower('${appEnvironment}${prefix}${appName}${suffix}')
 
 //var keyvaultName = '${nodashName}kv'
 
 var storageAccountName = '${nodashName}sa'
+var storageAccountNameTmp = '${nodashName}satmp'
 
-//var appServicePlanName = '${dashName}-asp'
+var appServicePlanName = '${dashName}-asp'
 var functionAppName = '${nodashName}fa'
 var appInsightsName = '${nodashName}-ai'
+
+var fileShareSuffix = substring(uniqueString(subscription().id), 0, 4)
+var fileShareName = '${nodashName}fa${fileShareSuffix}'
 
 var vnetName = '${dashName}-vnet'
 param vnetAddress string = '10.4'
 param vnetMask string = '16'
 
+param isLinux bool = false
+
 param subnets array
-//  = [
-//   {
-//     name: 'sn-util-0-0-24'
-//     properties: {
-//       addressPrefix: '${vnetAddress}.0.0/24'
-//     }
-//   }
-//   {
-//     name: 'sn-util-1-0-24'
-//     properties: {
-//       addressPrefix: '${vnetAddress}.1.0/24'
-//     }
-//   }
-//   {
-//     name: 'sn-util-2-0-24'
-//     properties: {
-//       addressPrefix: '${vnetAddress}.2.0/24'
-//       privateLinkServiceNetworkPolicies: 'Disabled'
-//       privateEndpointNetworkPolicies: 'Disabled'
-//     }
-//   }
-//   {
-//     name: 'sn-func-3-0-27-d'
-//     properties: {
-//       addressPrefix: '${vnetAddress}.3.0/27'
-//       delegations: [
-//         {
-//           name: 'delegation'
-//           properties: {
-//             serviceName: 'Microsoft.Web/serverFarms'
-//           }
-//         }
-//       ]
-//     }
-//   }
-// ]
 
 param deployDate object = {
   'DeployDate': utcNow('d')
 }
 
 param tags object = union(resourceTags, deployDate)
-
 
 module vnet01 '01vnet.bicep' = {
   name: 'vnet1'
@@ -140,23 +116,26 @@ module dnsZoneGroup1 '05privateEndpointZoneGroups.bicep' = {
   }
 }
 
-module storage01 'modules/storageaccount.bicep' = {
-  name: 'storename'
+module storageTmp 'modules/basicstorageaccount.bicep' = {
+  name: 'storenametmp'
   params: {
     location: location
-    storageAccountName: storageAccountName
+    storageAccountName: storageAccountNameTmp
     storageAccountSku: 'Standard_LRS'
     kind: 'StorageV2'
     tags: tags
   }
 }
 
-module fileShare01 'modules/storageaccountfileshare.bicep' = {
-  name: 'fileshare'
+module fileShareTmp 'modules/storageaccountfileshare.bicep' = {
+  name: 'filesharetmp'
   params: {
-    fileShareName: functionAppName
-    storageAccountName: storageAccountName
+    fileShareName: fileShareName
+    storageAccountName: storageAccountNameTmp
   }
+  dependsOn: [
+    storageTmp
+  ]
 }
 
 module appInsights01 'modules/appinsights.bicep' = {
@@ -166,3 +145,87 @@ module appInsights01 'modules/appinsights.bicep' = {
     location: resourceGroup().location
   }
 }
+
+module appServicePlan 'modules/appserviceplan.bicep' = {
+  name: 'funcAppServicePlan'
+  params: {
+    functionAppPlanName: appServicePlanName
+    functionAppPlanSku: 'EP3'
+    isLinux: false
+    location: resourceGroup().location
+    tags: tags
+  }
+}
+
+module premFunc 'modules/premiumfunctionapp.bicep' = {
+  name: 'premFunc01'
+  params: {
+    appInsightsName: appInsightsName
+    appServicePlanName: appServicePlanName
+    functionAppName: functionAppName
+    isLinux: isLinux
+    location: resourceGroup().location
+    storageAccountName: storageAccountNameTmp
+    functionContentShareName: fileShareName
+    subnetName: functionSubnetName
+    tags: tags
+    vnetName: vnetName
+    functionAppScaleLimit: 10
+    minimumElasticInstanceCount: 3
+    identityType: 'SystemAssigned'
+    runtime: 'dotnet/3.1'
+  }
+  dependsOn: [
+    appServicePlan
+    appInsights01
+    storageTmp
+    fileShareTmp
+  ]
+}
+
+module storage01 'modules/storageaccount_rbac.bicep' = {
+  name: 'funcstore'
+  params: {
+    subscriptionId: subscriptionId
+    location: location
+    storageAccountName: storageAccountName
+    storageAccountSku: 'Standard_ZRS'
+    kind: 'StorageV2'
+    tags: tags
+    principalId: premFunc.outputs.managedIdentity
+  }
+  dependsOn: [
+    premFunc
+  ]
+}
+
+module privateEndpoint2 '07privateEndpointsFunction.bicep' = {
+  name: 'funcEndpoints'
+  params: {
+    tags: tags
+    functionAppName: functionAppName
+    functionAppId: premFunc.outputs.functionAppId
+    subnetName: 'sn-util-2-0-24'
+    vnetName: vnetName
+  }
+}
+
+module fileShare01 'modules/storageaccountfileshare.bicep' = {
+  name: 'fileshare'
+  params: {
+    fileShareName: fileShareName
+    storageAccountName: storageAccountName
+  }
+  dependsOn: [
+    storage01
+  ]
+}
+
+output subscriptionId string = subscriptionId
+output location string = location
+output fileShareName string = fileShareName
+output functionAppName string = functionAppName
+output backingStoreFileShareName string = fileShareName
+output backingStoreTmpAccountName string = storageAccountNameTmp
+output backingStoreAccountName string = storageAccountName
+output resourceGroupName string = resourceGroupName

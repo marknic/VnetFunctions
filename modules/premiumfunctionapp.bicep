@@ -1,4 +1,3 @@
-
 @description('The name of the Function App.')
 param functionAppName string
 
@@ -29,45 +28,47 @@ param vnetName string
 @description('Name of the subnet the Function App should be added to for (VNET Integration).')
 param subnetName string
 
+@description('Set to false to utilize a 64-bit process.  Default is true (32-bit process).')
+param use32BitWorkerProcess bool = true
+
 @allowed([
-  'net/3.1'
+  'dotnet/3.1'
   'java/8'
   'java/11'
   'node/12'
   'node/14'
 ])
 @description('The runtime (language) and version for this Function App.')
-param runtime string = 'net/3.1'
+param runtime string = 'dotnet/3.1'
 
+// Scaling
+@description('The number of instances that are always ready and warm for this function app.')
+@minValue(3)
+param minimumElasticInstanceCount int = 3
 
+param functionAppScaleLimit int = 20
 
+// Variables
 var runtimeSplit = split(runtime, '/')
 var workerRuntime = runtimeSplit[0]
-//var runtimeVersion = runtimeSplit[1]
 
-// var javaVersion = workerRuntime == 'java' ? runtimeVersion : null
-// var nodeVersion = workerRuntime == 'node' ? runtimeVersion : null
-// var netVersion = workerRuntime == 'net' ? runtimeVersion : null
-
-var functionContentShareName = '${functionAppName}${substring(uniqueString(resourceGroup().id),0,4)}'
+param functionContentShareName string
 
 var linuxOS = useContainers ? true : isLinux
 
-
-@description('Indicates if this function should be in a warm/running state at all times.')
-param alwaysOn bool = true
-
-@allowed( [
+@allowed([
   'None'
   'SystemAssigned'
   'SystemAssigned, UserAssigned'
   'UserAssigned'
 ])
-param identityType string
+param identityType string = 'SystemAssigned'
 
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' existing = {
+  name: vnetName
+}
 
-
-resource storageAccount 'Microsoft.Storage/storageAccounts@2021-02-01' existing =  {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2021-02-01' existing = {
   name: storageAccountName
 }
 
@@ -91,17 +92,22 @@ resource functionApp 'Microsoft.Web/sites@2021-01-01' = {
     serverFarmId: appServicePlan.id
     reserved: linuxOS
     httpsOnly: true
-    //virtualNetworkSubnetId:
+    clientAffinityEnabled: false
+    virtualNetworkSubnetId: '${virtualNetwork.id}/subnets/${subnetName}'
     siteConfig: {
-      alwaysOn: alwaysOn
-      linuxFxVersion: useContainers ? null : runtime
+      minimumElasticInstanceCount: minimumElasticInstanceCount
+      functionAppScaleLimit: functionAppScaleLimit
+      vnetName: vnetName
+      loadBalancing: 'LeastRequests'
+      ftpsState: 'FtpsOnly'
+      vnetRouteAllEnabled: true
+      use32BitWorkerProcess: use32BitWorkerProcess
     }
   }
   dependsOn: [
     appServicePlan
     appInsightsComponents
     storageAccount
-
   ]
 }
 
@@ -111,22 +117,23 @@ resource appSettings 'Microsoft.Web/sites/config@2021-01-01' = {
   properties: {
     APPINSIGHTS_INSTRUMENTATIONKEY: appInsightsComponents.properties.InstrumentationKey
     APPLICATIONINSIGHTS_CONNECTION_STRING: appInsightsComponents.properties.ConnectionString
-    AzureWebJobsStorage: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value}'
-    WEBSITE_CONTENTAZUREFILECONNECTIONSTRING: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value}'
+    AzureWebJobsStorage: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
+    WEBSITE_CONTENTAZUREFILECONNECTIONSTRING: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
     WEBSITE_CONTENTSHARE: functionContentShareName
     FUNCTIONS_EXTENSION_VERSION: '~3'
     FUNCTIONS_WORKER_RUNTIME: workerRuntime
-    WEBSITE_VNET_ROUTE_ALL: '1'
-    WEBSITE_CONTENTOVERVNET: '1'
+    //WEBSITE_VNET_ROUTE_ALL: '1'
+    //WEBSITE_CONTENTOVERVNET: '1'
+    //WEBSITE_DNS_SERVER: '168.63.129.16'
   }
 }
 
-resource functionSlot 'Microsoft.Web/sites/slots@2020-12-01' = {
-  name: 'Staging'
-  kind: 'app'
-  parent: functionApp
-  location: location
-}
+// resource functionSlot 'Microsoft.Web/sites/slots@2020-12-01' = {
+//   parent: functionApp
+//   name: 'Staging'
+//   kind: 'app'
+//   location: location
+// }
 
 resource planNetworkConfig 'Microsoft.Web/sites/networkConfig@2021-01-01' = {
   parent: functionApp
@@ -136,3 +143,7 @@ resource planNetworkConfig 'Microsoft.Web/sites/networkConfig@2021-01-01' = {
     swiftSupported: true
   }
 }
+
+
+output managedIdentity string = functionApp.identity.principalId
+output functionAppId string = functionApp.id

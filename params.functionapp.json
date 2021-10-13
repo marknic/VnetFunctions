@@ -2,6 +2,12 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "subscriptionId":{
+      "value": "e752c181-7a2c-4de5-b16b-b3288ed54e42"
+    },
+    "resourceGroupName":{
+      "value": "Functions-In-A-Vnet-RG"
+    },
     "resourceTags": {
       "value": {
         "DeptName": "Innovation",
@@ -66,6 +72,12 @@
           }
         }
       ]
+    },
+    "functionSubnetName":{
+      "value": "sn-func-3-0-27-d"
+    },
+    "location":{
+      "value": "eastus"
     }
   }
 }
