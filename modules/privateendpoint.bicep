@@ -9,12 +9,12 @@ param tags object
   'table'
   'blob'
   'queue'
-  'function'
+  'sites'
 ])
 param groupId string
 
 // -- Private Endpoints --
-resource storageFilePrivateEndpoint 'Microsoft.Network/privateEndpoints@2021-02-01' = {
+resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-02-01' = {
   name: privateEndpointName
   location: resourceGroup().location
   tags: tags
@@ -35,3 +35,5 @@ resource storageFilePrivateEndpoint 'Microsoft.Network/privateEndpoints@2021-02-
     ]
   }
 }
+
+output privateEndpointIp object = privateEndpoint.properties.networkInterfaces[0]

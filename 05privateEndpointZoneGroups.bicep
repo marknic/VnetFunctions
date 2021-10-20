@@ -22,4 +22,3 @@ module privateEndpointZoneGroup2 'modules/dnsZoneGroup.bicep' = {
     privateEndpointName: privateEndpointStorageFileName
   }
 }
-

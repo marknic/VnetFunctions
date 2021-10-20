@@ -1,7 +1,7 @@
 @description('Specifies the name of the key vault.')
 param name string
 
-@description('list of tags')
+@description('list of standard resource tags')
 param tags object
 
 @description('Specifies the Azure location where the key vault should be created.')

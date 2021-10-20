@@ -5,7 +5,7 @@ param vnetName string
 param tags object
 param subnets array
 
-module vnetcreate 'modules/vnet.bicep' = {
+module vnet 'modules/vnet.bicep' = {
   name: 'basevnet'
   params: {
     vnetName: vnetName
@@ -15,4 +15,10 @@ module vnetcreate 'modules/vnet.bicep' = {
   }
 }
 
-output vnetId string = vnetcreate.outputs.vnetId
+output vnetId string = vnet.outputs.vnetId
+
+output GeneralUseSubnetId string = vnet.outputs.GeneralUseSubnet.Id
+output VmSubnetId string = vnet.outputs.VmSubnet.Id
+output PrivateEndpointSubnetId string = vnet.outputs.PrivateEndpointSubnet.Id
+output FunctionSubnetId string = vnet.outputs.FunctionSubnet.Id
+output AzureBastionSubnetId string = vnet.outputs.AzureBastionSubnet.Id

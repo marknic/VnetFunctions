@@ -1,5 +1,5 @@
 
-@description('App Service Plan resource location.')
+@description('The location into which the resources should be deployed.')
 param location string
 
 @description('App Service Plan resource name.')
@@ -12,6 +12,8 @@ param functionAppPlanName string
 ])
 param functionAppPlanSku string
 param isLinux bool
+
+@description('list of standard resource tags')
 param tags object
 
 resource plan 'Microsoft.Web/serverfarms@2021-01-15' = {

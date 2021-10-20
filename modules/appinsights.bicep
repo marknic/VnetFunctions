@@ -1,6 +1,8 @@
 
 param applicationInsightsName string
-param location string 
+
+@description('The location into which the resources should be deployed.')
+param location string
 
 resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: applicationInsightsName

@@ -1,26 +1,44 @@
-param tags object
 
-var privateStorageBlobDnsZoneName = 'privatelink.blob.${environment().suffixes.storage}'
-var privateStorageFileDnsZoneName = 'privatelink.file.${environment().suffixes.storage}'
+
+param tags object
+param virtualNetworkId string
+
+@description('The name of the resource the private endpoint is being created for.')
+param privateResourceName string
+
+@allowed([
+  'blob'
+  'file'
+  'sites'
+])
+param zoneType string
+
+var privateDnsZoneName = zoneType == 'blob' ? 'privatelink.blob.${environment().suffixes.storage}' : zoneType == 'file' ? 'privatelink.file.${environment().suffixes.storage}' : 'privatelink.azurewebsites.net'
+var privateZoneLinkName = '${privateResourceName}-${zoneType}-link'
+
+var zoneResName = 'zone${zoneType}'
+var linkResName = '${zoneResName}link'
 
 // -- Private DNS Zones --
-module dnsZone1 'modules/dnsZone.bicep' = {
-  name: 'zone1'
+module dnsZone 'modules/dnsZone.bicep' = {
+  name: zoneResName
   params: {
-    zoneName: privateStorageBlobDnsZoneName
+    zoneName: privateDnsZoneName
     tags: tags
   }
 }
 
-module dnsZone2 'modules/dnsZone.bicep' = {
-  name: 'zone2'
+
+module zonelink 'modules/dnsZoneLink.bicep' = {
+  name: linkResName
   params: {
-    zoneName: privateStorageFileDnsZoneName
     tags: tags
+    vnetId: virtualNetworkId
+    linkName: privateZoneLinkName
+    zoneName: privateDnsZoneName
   }
 }
 
-output blobZoneName string = privateStorageBlobDnsZoneName
-output fileZoneName string = privateStorageFileDnsZoneName
-output blobZoneId string = dnsZone1.outputs.zoneId
-output fileZoneId string = dnsZone2.outputs.zoneId
+output privateDnsZoneName string = privateDnsZoneName
+output privateZoneLinkName string = privateZoneLinkName
+output privateZoneId string = dnsZone.outputs.zoneId

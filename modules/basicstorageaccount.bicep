@@ -1,4 +1,6 @@
 param storageAccountName string
+
+@description('The location into which the resources should be deployed.')
 param location string
 
 @allowed([
@@ -22,6 +24,8 @@ param kind string = 'StorageV2'
   'Standard_ZRS'
 ])
 param storageAccountSku string = 'Standard_ZRS'
+
+@description('list of standard resource tags')
 param tags object
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {

@@ -1,4 +1,4 @@
-param virtualNetworkId string
+param vnetId string
 param tags object
 param zoneName string
 param linkName string
@@ -15,7 +15,7 @@ resource storageFileDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetwor
   properties: {
     registrationEnabled: false
     virtualNetwork: {
-      id: virtualNetworkId
+      id: vnetId
     }
   }
   tags: tags

@@ -1,4 +1,6 @@
 param storageAccountName string
+
+@description('Region (datacenter) where this resource is to be deployed')
 param location string
 
 @allowed([

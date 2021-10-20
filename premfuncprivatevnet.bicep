@@ -125,7 +125,7 @@ resource storageTableDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   location: 'global'
 }
 
-//##################################### Private Storage Links ###########################################################
+//##################################### Private DNS Zone Links ###########################################################
 
 // -- Private DNS Zone Links --
 resource storageFileDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
@@ -304,6 +304,7 @@ resource storageQueuePrivateEndpoint 'Microsoft.Network/privateEndpoints@2021-02
     ]
   }
 }
+
 
 resource storageBlobPrivateEndpoint 'Microsoft.Network/privateEndpoints@2021-02-01' = {
   name: privateEndpointStorageBlobName

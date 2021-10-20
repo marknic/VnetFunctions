@@ -48,7 +48,7 @@ module privateEndpoint1 '04privateEndpoints.bicep' = {
       tags: tags
       storageAccountId: storage01.id
       storageAccountName: storageAccountName
-      subnetName: 'sn-util-2-0-24'
+      subnetName: 'sn-pep-2-0-24'
       vnetName: vnetName
     }
   }

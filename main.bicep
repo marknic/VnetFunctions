@@ -32,9 +32,13 @@ param resourceGroupName string
 ])
 param appEnvironment string
 
+@description('Specifies the Azure location where the key vault should be created.')
 param location string = resourceGroup().location
 
 param functionSubnetName string
+
+param storagePrivateEndpointSubnet string = 'sn-pep-2-0-24'
+param functionPrivateEndpointSubnet string = 'sn-pep-2-0-24'
 
 var dashName = toLower('${appEnvironment}-${prefix}-${appName}-${suffix}')
 var nodashName = toLower('${appEnvironment}${prefix}${appName}${suffix}')
@@ -52,6 +56,9 @@ var fileShareSuffix = substring(uniqueString(subscription().id), 0, 4)
 var fileShareName = '${nodashName}fa${fileShareSuffix}'
 
 var vnetName = '${dashName}-vnet'
+
+var privateLinkFuncName = 'privatelink.azurewebsites.net/${functionAppName}.scm'
+
 param vnetAddress string = '10.4'
 param vnetMask string = '16'
 
@@ -65,7 +72,7 @@ param deployDate object = {
 
 param tags object = union(resourceTags, deployDate)
 
-module vnet01 '01vnet.bicep' = {
+module parentVnet '01vnet.bicep' = {
   name: 'vnet1'
   params: {
     vnetName: vnetName
@@ -76,46 +83,19 @@ module vnet01 '01vnet.bicep' = {
   }
 }
 
-module privatezone01 '02privatezones.bicep' = {
-  name: 'zones'
+module jumpServer '07bastion.bicep' = {
+  name: 'bastionConnect'
   params: {
-    tags: tags
+    bastionSubnetId: parentVnet.outputs.AzureBastionSubnetId
+    vmSubnetId: parentVnet.outputs.VmSubnetId
   }
+  dependsOn: [
+    parentVnet
+  ]
 }
 
-module zoneLink1 '03privatelinks.bicep' = {
-  name: 'zonelinks'
-  params: {
-    tags: tags
-    storageAccountName: storageAccountName
-    virtualNetworkId: vnet01.outputs.vnetId
-    zoneNameBlob: privatezone01.outputs.blobZoneName
-    zoneNameFile: privatezone01.outputs.fileZoneName
-  }
-}
 
-module privateEndpoint1 '04privateEndpoints.bicep' = {
-  name: 'endpoints'
-  params: {
-    tags: tags
-    storageAccountId: storage01.outputs.id
-    storageAccountName: storageAccountName
-    subnetName: 'sn-util-2-0-24'
-    vnetName: vnetName
-  }
-}
-
-module dnsZoneGroup1 '05privateEndpointZoneGroups.bicep' = {
-  name: 'zoneGroups'
-  params: {
-    blobZoneId: privatezone01.outputs.blobZoneId
-    fileZoneId: privatezone01.outputs.fileZoneId
-    storageAccountName: storageAccountName
-    privateEndpointStorageBlobName: privateEndpoint1.outputs.privateEndpointBlobName
-    privateEndpointStorageFileName: privateEndpoint1.outputs.privateEndpointFileName
-  }
-}
-
+// Backing Store Creation - Temporary
 module storageTmp 'modules/basicstorageaccount.bicep' = {
   name: 'storenametmp'
   params: {
@@ -127,6 +107,7 @@ module storageTmp 'modules/basicstorageaccount.bicep' = {
   }
 }
 
+// Backing Store Creation -
 module fileShareTmp 'modules/storageaccountfileshare.bicep' = {
   name: 'filesharetmp'
   params: {
@@ -199,17 +180,6 @@ module storage01 'modules/storageaccount_rbac.bicep' = {
   ]
 }
 
-module privateEndpoint2 '07privateEndpointsFunction.bicep' = {
-  name: 'funcEndpoints'
-  params: {
-    tags: tags
-    functionAppName: functionAppName
-    functionAppId: premFunc.outputs.functionAppId
-    subnetName: 'sn-util-2-0-24'
-    vnetName: vnetName
-  }
-}
-
 module fileShare01 'modules/storageaccountfileshare.bicep' = {
   name: 'fileshare'
   params: {
@@ -219,6 +189,129 @@ module fileShare01 'modules/storageaccountfileshare.bicep' = {
   dependsOn: [
     storage01
   ]
+}
+
+module privateZoneBlob '02privateZones.bicep' = {
+  name: 'privateBlob'
+  params: {
+    privateResourceName: storageAccountName
+    tags: tags
+    virtualNetworkId: parentVnet.outputs.vnetId
+    zoneType: 'blob'
+  }
+}
+
+module privateZoneFile '02privateZones.bicep' = {
+  name: 'privateFile'
+  params: {
+    privateResourceName: storageAccountName
+    tags: tags
+    virtualNetworkId: parentVnet.outputs.vnetId
+    zoneType: 'file'
+  }
+}
+
+module privateZoneFunction '02privateZones.bicep' = {
+  name: 'privateFunction'
+  params: {
+    privateResourceName: functionAppName
+    tags: tags
+    virtualNetworkId: parentVnet.outputs.vnetId
+    zoneType: 'sites'
+  }
+}
+
+module privateEndpointZoneBlob '03privateEndpoint.bicep' = {
+  name: 'blobPrivateEndpoint'
+  params: {
+    groupId: 'blob'
+    privateResourceName: storageAccountName
+    resourceId: storage01.outputs.id
+    subnetName: storagePrivateEndpointSubnet
+    tags: tags
+    vnetName: vnetName
+    zoneId: privateZoneBlob.outputs.privateZoneId
+  }
+  dependsOn: [
+    privateZoneBlob
+  ]
+}
+
+module privateEndpointZoneFile '03privateEndpoint.bicep' = {
+  name: 'filePrivateEndpoint'
+  params: {
+    groupId: 'file'
+    privateResourceName: storageAccountName
+    resourceId: storage01.outputs.id
+    subnetName: storagePrivateEndpointSubnet
+    tags: tags
+    vnetName: vnetName
+    zoneId: privateZoneFile.outputs.privateZoneId
+  }
+  dependsOn: [
+    privateZoneFile
+  ]
+}
+
+module privateEndpointZoneSites '03privateEndpoint.bicep' = {
+  name: 'sitesPrivateEndpoint'
+  params: {
+    groupId: 'sites'
+    privateResourceName: functionAppName
+    resourceId: premFunc.outputs.functionAppId
+    subnetName: functionPrivateEndpointSubnet
+    tags: tags
+    vnetName: vnetName
+    zoneId: privateZoneFunction.outputs.privateZoneId
+  }
+  dependsOn: [
+    privateZoneFunction
+  ]
+}
+
+module functionEndpointIp 'modules/data/privateEndpointIp.bicep' = {
+  name: 'getFunctionEpIp'
+  params: {
+    endpointName: privateEndpointZoneSites.outputs.privateEndpointName
+  }
+}
+
+
+resource dnsZoneFunc 'Microsoft.Network/privateDnsZones/A@2020-06-01' = {
+  name: privateLinkFuncName
+  parent: privateZoneFunction
+  properties: {
+    metadata: {
+      creator: 'Created via Bicep template'
+    }
+    ttl: 10
+    aRecords: [
+      {
+        ipv4Address: functionEndpointIp.outputs.nicIp
+      }
+    ]
+  }
+}
+
+resource dnsZoneScm 'Microsoft.Network/privateDnsZones/A@2020-06-01' = {
+  name: '${privateLinkFuncName}.scm'
+  parent: privateZoneFunction
+  properties: {
+    metadata: {
+      creator: 'Created via Bicep template'
+    }
+    ttl: 10
+    aRecords: [
+      {
+        ipv4Address: functionEndpointIp.outputs.nicIp
+      }
+    ]
+  }
+}
+
+resource dnsZoneSoa 'Microsoft.Network/privateDnsZones/SOA@2020-06-01' = {
+  name: 'privatelink.azurewebsites.net/@'
+  parent: privateZoneFunction
 }
 
 output subscriptionId string = subscriptionId
