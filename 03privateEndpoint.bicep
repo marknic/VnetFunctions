@@ -41,7 +41,7 @@ module endpoint 'modules/privateendpoint.bicep' = {
 
 var zoneResName = 'zoneGroup${groupId}'
 
-module privateEndpointZoneGroup1 'modules/dnsZoneGroup.bicep' = {
+module privateEndpointZoneGroup 'modules/dnsZoneGroup.bicep' = {
   name: zoneResName
   params: {
     dnsZoneGroupName: 'blobPrivateDnsZoneGroup'
