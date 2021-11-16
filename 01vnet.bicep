@@ -6,7 +6,7 @@ param tags object
 param subnets array
 
 module vnet 'modules/vnet.bicep' = {
-  name: 'basevnet'
+  name: 'baseVnet'
   params: {
     vnetName: vnetName
     addressPrefix: vnetAddressPrefix

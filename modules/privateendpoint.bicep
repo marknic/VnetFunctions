@@ -36,4 +36,4 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-02-01' = {
   }
 }
 
-output privateEndpointIp object = privateEndpoint.properties.networkInterfaces[0]
+output netInterface object = first(privateEndpoint.properties.networkInterfaces)

@@ -8,6 +8,9 @@
     "resourceGroupName":{
       "value": "Functions-In-A-Vnet-RG"
     },
+    "location": {
+      "value": "eastus"
+    },
     "resourceTags": {
       "value": {
         "DeptName": "Innovation",
@@ -41,14 +44,18 @@
           "name": "sn-util-0-0-24",
           "properties": {
             "addressPrefix": "10.4.0.0/24",
-            "nsg": "nsgDefault"
+            "networkSecurityGroup": {
+              "id": "nsgDefault"
+            }
           }
         },
         {
           "name": "sn-vm-1-0-24",
           "properties": {
             "addressPrefix": "10.4.1.0/24",
-            "nsg": "nsgVmStandard"
+            "networkSecurityGroup": {
+              "id": "nsgVmStandard"
+            }
           }
         },
         {
@@ -57,7 +64,9 @@
             "addressPrefix": "10.4.2.0/24",
             "privateLinkServiceNetworkPolicies": "Disabled",
             "privateEndpointNetworkPolicies": "Disabled",
-            "networkSecurityGroup": "nsgDefault"
+            "networkSecurityGroup": {
+              "id": "nsgDefault"
+            }
           }
         },
         {
@@ -72,23 +81,21 @@
                 }
               }
             ],
-            "nsg": "nsgDefault"
+            "networkSecurityGroup": {
+              "id": "nsgDefault"
+            }
           }
         },
         {
           "name": "AzureBastionSubnet",
           "properties": {
             "addressPrefix": "10.4.4.0/27",
-            "nsg": "nsgBastion"
+            "networkSecurityGroup": {
+              "id": "nsgBastion"
+            }
           }
         }
       ]
-    },
-    "functionSubnetName":{
-      "value": "sn-func-3-0-27-d"
-    },
-    "location":{
-      "value": "eastus"
     }
   }
 }

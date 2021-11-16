@@ -1,19 +1,5 @@
 param bastionSubnetId string
 param vmSubnetId string
-param adminPassword string = 'HeWZ1T4XqVLa#R2*'
-param adminUsername string = 'azureuser'
-
-param vmName string = 'jumpserverVm'
-
-module vm 'modules/vm.bicep' = {
-  name: vmName
-  params: {
-    adminPassword: adminPassword
-    adminUsername: adminUsername
-    vmName: vmName
-    subnetId: vmSubnetId
-  }
-}
 
 resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2019-11-01' = {
   name: 'bastionPublicIP'
@@ -50,4 +36,13 @@ resource bastionRes 'Microsoft.Network/bastionHosts@2021-02-01' = {
   dependsOn: [
     publicIPAddress
   ]
+}
+
+module jumpbox 'modules/linuxJumpServerVm.bicep' = {
+  name: 'linuxJumpbox'
+  params: {
+    authenticationType: 'password'
+    adminPasswordOrKey: 'vyT7D8jG02P$tys%'
+    subnetId: vmSubnetId
+  }
 }

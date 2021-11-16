@@ -49,7 +49,7 @@ param publicIpSku string = 'Standard'
 param OSVersion string = '2019-Datacenter'
 
 @description('Size of the virtual machine.')
-param vmSize string = 'Standard_D2_v3'
+param vmSize string = 'Standard_D4s_v3'
 
 @description('Location for all resources.')
 param location string = resourceGroup().location
@@ -60,9 +60,7 @@ param vmName string = 'simple-vm'
 var storageAccountName = 'bootdiags${uniqueString(resourceGroup().id)}'
 var nicName = 'jumpserverVmNic'
 
-var networkSecurityGroupName = 'default-NSG'
-
-resource stg 'Microsoft.Storage/storageAccounts@2021-04-01' = {
+resource vmStorage 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   name: storageAccountName
   location: location
   sku: {
@@ -85,27 +83,6 @@ resource pip 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
   }
 }
 
-resource securityGroup 'Microsoft.Network/networkSecurityGroups@2021-02-01' = {
-  name: networkSecurityGroupName
-  location: location
-  properties: {
-    securityRules: [
-      {
-        name: 'default-allow-3389'
-        properties: {
-          priority: 1000
-          access: 'Allow'
-          direction: 'Inbound'
-          destinationPortRange: '3389'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-        }
-      }
-    ]
-  }
-}
 
 resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
   name: nicName
@@ -171,7 +148,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2021-03-01' = {
     diagnosticsProfile: {
       bootDiagnostics: {
         enabled: true
-        storageUri: stg.properties.primaryEndpoints.blob
+        storageUri: vmStorage.properties.primaryEndpoints.blob
       }
     }
   }

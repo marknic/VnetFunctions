@@ -20,3 +20,4 @@ module nicInfo 'networkInterfaceProperties.bicep' = {
 
 // Return with the IP address
 output nicIp string = first(nicInfo.outputs.nicProps.ipConfigurations).properties.privateIPAddress
+output nicName string = substring(nicId, lastIndexOf(nicId, '/') + 1)

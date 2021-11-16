@@ -2,12 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "subscriptionId":{
-      "value": "e752c181-7a2c-4de5-b16b-b3288ed54e42"
-    },
-    "resourceGroupName":{
-      "value": "Functions-In-A-Vnet-RG"
-    },
     "resourceTags": {
       "value": {
         "DeptName": "Innovation",
@@ -26,13 +20,13 @@
     "appEnvironment": {
       "value": "Dev"
     },
-    "prefix":{
+    "prefix": {
       "value": "mn"
     },
-    "suffix":{
+    "suffix": {
       "value": "01"
     },
-    "appName":{
+    "appName": {
       "value": "privatefunc"
     },
     "subnets": {
@@ -41,14 +35,18 @@
           "name": "sn-util-0-0-24",
           "properties": {
             "addressPrefix": "10.4.0.0/24",
-            "nsg": "nsgDefault"
+            "networkSecurityGroup": {
+              "id": "/subscriptions/e752c181-7a2c-4de5-b16b-b3288ed54e42/resourceGroups/Functions-In-A-Vnet-RG/providers/Microsoft.Network/networkSecurityGroups/nsgDefault"
+            }
           }
         },
         {
           "name": "sn-vm-1-0-24",
           "properties": {
             "addressPrefix": "10.4.1.0/24",
-            "nsg": "nsgVmStandard"
+            "networkSecurityGroup": {
+              "id": "/subscriptions/e752c181-7a2c-4de5-b16b-b3288ed54e42/resourceGroups/Functions-In-A-Vnet-RG/providers/Microsoft.Network/networkSecurityGroups/nsgVmStandard"
+            }
           }
         },
         {
@@ -57,7 +55,9 @@
             "addressPrefix": "10.4.2.0/24",
             "privateLinkServiceNetworkPolicies": "Disabled",
             "privateEndpointNetworkPolicies": "Disabled",
-            "networkSecurityGroup": "nsgDefault"
+            "networkSecurityGroup": {
+              "id": "/subscriptions/e752c181-7a2c-4de5-b16b-b3288ed54e42/resourceGroups/Functions-In-A-Vnet-RG/providers/Microsoft.Network/networkSecurityGroups/nsgDefault"
+            }
           }
         },
         {
@@ -72,23 +72,21 @@
                 }
               }
             ],
-            "nsg": "nsgDefault"
+            "networkSecurityGroup": {
+              "id": "/subscriptions/e752c181-7a2c-4de5-b16b-b3288ed54e42/resourceGroups/Functions-In-A-Vnet-RG/providers/Microsoft.Network/networkSecurityGroups/nsgDefault"
+            }
           }
         },
         {
           "name": "AzureBastionSubnet",
           "properties": {
             "addressPrefix": "10.4.4.0/27",
-            "nsg": "nsgBastion"
+            "networkSecurityGroup": {
+              "id": "/subscriptions/e752c181-7a2c-4de5-b16b-b3288ed54e42/resourceGroups/Functions-In-A-Vnet-RG/providers/Microsoft.Network/networkSecurityGroups/nsgBastion"
+            }
           }
         }
       ]
-    },
-    "functionSubnetName":{
-      "value": "sn-func-3-0-27-d"
-    },
-    "location":{
-      "value": "eastus"
     }
   }
 }

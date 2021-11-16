@@ -1,4 +1,4 @@
-#az login
+# #az login
 
 # Setup - read parameters file for some basic information
 $parameterFile = 'params.functionapp.json'
@@ -19,15 +19,28 @@ if ($(az group exists --name $resourceGroupName) -eq $false) {
 }
 
 # Deploy the main.bicep template
-$deployResult = $(az deployment group create -g $resourceGroupName --template-file '.\main.bicep' --parameters params.functionapp.json)
+$deployResult = $(az deployment group create -g $resourceGroupName --template-file '.\main01.bicep' --parameters params.functionapp.json)
 
 if (!$?) {
   Write-Error "Error deploying the main.bicep template.  Exiting"
   Exit
 }
 
+$deployResult | Set-Content -Path 'deployresult.json'
+
+
+# $deployResultJson = Get-Content -Path 'deployresult.json'
+
 # Convert the output data into a PS object
 $outputData = $deployResult | ConvertFrom-Json
+
+# output fileShareName string = fileShareName
+# output functionAppName string = functionAppName
+# output backingStoreFileShareName string = fileShareName
+# output backingStoreTmpAccountName string = storageAccountNameTmp
+# output backingStoreAccountName string = storageAccountName
+# output resourceGroupName string = resourceGroupName
+
 
 # Get the values from the output object
 $fileShareName = $outputData.properties.outputs.fileShareName.value
@@ -38,6 +51,19 @@ $functionAppName = $outputData.properties.outputs.functionAppName.value
 
 # Make sure the site is initialized and running
 $responseBody = $(Invoke-RestMethod -Method Get -Uri "http://$($functionAppName).azurewebsites.net")
+
+$successIndex = $responseBody.IndexOf("Your Functions 3.0 app is up and running")
+
+if ($successIndex -gt 0) {
+  Write-Host "The preliminary build of the Function App was successful."
+}
+else {
+  Write-Error "The preliminary build of the Function App was NOT successful."
+}
+
+Exit
+
+
 
 
 # FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS
@@ -52,7 +78,7 @@ function Get-StorageKey {
   )
 
   # Set for retry
-  for($i=0; $i -lt 3; $i++) {
+  for ($i = 0; $i -lt 3; $i++) {
 
     $keys = $(az storage account keys list --account-name $storageAccountName --resource-group $resourceGroup --subscription $subscription)
 
@@ -168,10 +194,10 @@ function ConvertTo-Bicep-Parameter {
 
   $jsonSettings = $jsonData | ConvertTo-Json
 
-  $jsonSettings=$jsonSettings.Replace("`n", "")
-  $jsonSettings=$jsonSettings.Replace("`r", "")
-  $jsonSettings=$jsonSettings.Replace(" ", "")
-  $jsonSettings=$jsonSettings.Replace("`"", "`"`"`"")
+  $jsonSettings = $jsonSettings.Replace("`n", "")
+  $jsonSettings = $jsonSettings.Replace("`r", "")
+  $jsonSettings = $jsonSettings.Replace(" ", "")
+  $jsonSettings = $jsonSettings.Replace("`"", "`"`"`"")
 
   return $jsonSettings
 }
@@ -213,14 +239,14 @@ foreach ($container in $containers) {
   az storage container create --account-key $destinationKey --account-name $destinationStorageAccountName --name $container.name
 
   az storage blob copy start-batch `
-  --auth-mode key `
-  --source-account-key $sourceKey --source-account-name $sourceStorageAccountName `
-  --source-container $container.name `
-  --account-key $destinationKey --account-name $destinationStorageAccountName `
-  --destination-container $container.name
+    --auth-mode key `
+    --source-account-key $sourceKey --source-account-name $sourceStorageAccountName `
+    --source-container $container.name `
+    --account-key $destinationKey --account-name $destinationStorageAccountName `
+    --destination-container $container.name
 }
 
-
+Write-Host "Retrieving App Settings"  -ForegroundColor green
 $appSettingsObject = $(az functionapp config appsettings list --name $functionAppName -g $resourceGroupName | ConvertFrom-Json)
 
 if (!$?) {
@@ -230,23 +256,27 @@ if (!$?) {
 
 $settingsObject = New-Object PSObject
 
-foreach($setting in $appSettingsObject) {
+Write-Host "Stepping through App Settings building settingsObject"  -ForegroundColor green
+
+foreach ($setting in $appSettingsObject) {
   if ($setting.name -eq "AzureWebJobsStorage" -or $setting.name -eq "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING") {
     $setting.value = $destinationConnString
   }
   Add-Member -InputObject $settingsObject -MemberType NoteProperty -Name $setting.name -Value $setting.value
 }
 
-Add-Member -InputObject $settingsObject -MemberType NoteProperty -Name "WEBSITE_VNET_ROUTE_ALL" -Value "1"
-Add-Member -InputObject $settingsObject -MemberType NoteProperty -Name "WEBSITE_CONTENTOVERVNET" -Value "1"
-Add-Member -InputObject $settingsObject -MemberType NoteProperty -Name "WEBSITE_DNS_SERVER" -Value "168.63.129.16"
+# Add-Member -InputObject $settingsObject -MemberType NoteProperty -Name "WEBSITE_VNET_ROUTE_ALL" -Value "1"
+# Add-Member -InputObject $settingsObject -MemberType NoteProperty -Name "WEBSITE_CONTENTOVERVNET" -Value "1"
+# Add-Member -InputObject $settingsObject -MemberType NoteProperty -Name "WEBSITE_DNS_SERVER" -Value "168.63.129.16"
 
 $jsonSettings = ConvertTo-Bicep-Parameter -jsonData $settingsObject
+
+Write-Host "Deploying 06updateAppSettings.bicep"  -ForegroundColor green
 
 az deployment group create -g $resourceGroupName --template-file '.\06updateAppSettings.bicep' --parameters functionAppName=$functionAppName settings=$jsonSettings
 
 if (!$?) {
-  Write-Error "Error deploying the main.bicep template - Updating the App Settings (06updateAppSettings.bicep).  Exiting"
+  Write-Error "Error deploying a bicep template - Updating the App Settings (06updateAppSettings.bicep).  Exiting"
   Exit
 }
 
