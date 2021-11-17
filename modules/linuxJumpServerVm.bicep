@@ -53,6 +53,10 @@ param publicIpSku string = 'Standard'
 ])
 param publicIPAllocationMethod string = 'Static'
 
+//
+// Variables
+//
+
 var networkInterfaceName = '${vmName}NetInt'
 var osDiskType = 'StandardSSD_LRS'
 
@@ -70,6 +74,10 @@ var linuxConfiguration = {
 
 var storageAccountName = 'bootdiags${uniqueString(resourceGroup().id)}'
 
+//
+// Resources
+//
+
 resource vmStorage 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   name: storageAccountName
   location: location
@@ -82,6 +90,9 @@ resource vmStorage 'Microsoft.Storage/storageAccounts@2021-04-01' = {
 resource nic 'Microsoft.Network/networkInterfaces@2020-06-01' = {
   name: networkInterfaceName
   location: location
+  dependsOn: [
+    pip
+  ]
   properties: {
     ipConfigurations: [
       {

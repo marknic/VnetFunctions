@@ -1,7 +1,13 @@
 param vnetId string
-param tags object
 param zoneName string
 param linkName string
+
+@description('list of standard resource tags.')
+param tags object = {}
+
+//
+// Resources
+//
 
 // -- Private DNS Zones --
 resource dnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' existing = {

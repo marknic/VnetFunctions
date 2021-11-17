@@ -60,9 +60,13 @@ param vmName string = 'simple-vm'
 var storageAccountName = 'bootdiags${uniqueString(resourceGroup().id)}'
 var nicName = 'jumpserverVmNic'
 
+@description('list of standard resource tags.')
+param tags object = {}
+
 resource vmStorage 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   name: storageAccountName
   location: location
+  tags: tags
   sku: {
     name: 'Standard_LRS'
   }
@@ -72,6 +76,7 @@ resource vmStorage 'Microsoft.Storage/storageAccounts@2021-04-01' = {
 resource pip 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
   name: publicIpName
   location: location
+  tags: tags
   sku: {
     name: publicIpSku
   }
@@ -87,6 +92,7 @@ resource pip 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
 resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
   name: nicName
   location: location
+  tags: tags
   properties: {
     ipConfigurations: [
       {
@@ -108,6 +114,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
 resource vm 'Microsoft.Compute/virtualMachines@2021-03-01' = {
   name: vmName
   location: location
+  tags: tags
   properties: {
     hardwareProfile: {
       vmSize: vmSize

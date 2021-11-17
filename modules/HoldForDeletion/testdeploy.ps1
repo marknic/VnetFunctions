@@ -19,5 +19,5 @@ if ($(az group exists --name $resourceGroupName) -eq $false) {
 # # Deploy the main.bicep template
 # $deployResult = $(az deployment group create -g $resourceGroupName --template-file '.\main01.bicep' --parameters params.functionapp.json)
 
-az deployment group create -g $resourceGroupName --template-file './test3.bicep'
+az deployment group create -g $resourceGroupName --template-file './modules/vnetintegration.bicep'
 

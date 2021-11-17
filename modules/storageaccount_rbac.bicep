@@ -1,8 +1,8 @@
-param subscriptionId string
+@description('Name of the storage account to create.')
 param storageAccountName string
 
 @description('Region (datacenter) where this resource is to be deployed')
-param location string
+param location string = resourceGroup().location
 
 @allowed([
   'BlobStorage'
@@ -26,13 +26,24 @@ param kind string = 'StorageV2'
 ])
 param storageAccountSku string = 'Standard_ZRS'
 
-param tags object
+@description('list of standard resource tags.')
+param tags object = {}
 
 @description('The principal to assign the role to')
 param principalId string
 
+param subscriptionId string = subscription().subscriptionId
+
+//
+// Variables
+//
+
 var roleBlob = resourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')
 var roleFile = resourceId('Microsoft.Authorization/roleDefinitions', '0c867c2a-1d8c-454a-a3db-ab2ea1bdc8bb')
+
+//
+// Resources
+//
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   name: storageAccountName
@@ -51,17 +62,17 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
 }
 
 resource roleAssignBlob 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name:  guid('Storage Blob Data Owner', 'FunctionApp' , subscriptionId)
+  name: guid('Storage Blob Data Owner', 'FunctionApp', subscriptionId)
   properties: {
     principalId: principalId
-    principalType:  'ServicePrincipal'
+    principalType: 'ServicePrincipal'
     roleDefinitionId: roleBlob
   }
   scope: storageAccount
 }
 
 resource roleAssignFile 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name: guid('Storage File Data SMB Share Contributor', 'FunctionApp' , subscriptionId)
+  name: guid('Storage File Data SMB Share Contributor', 'FunctionApp', subscriptionId)
   properties: {
     principalId: principalId
     principalType: 'ServicePrincipal'

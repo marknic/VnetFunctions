@@ -9,6 +9,10 @@ param ipAddressSites string
 param ipAddressBlob string
 param ipAddressFile string
 
+//
+// Resources
+//
+
 resource dnsZoneSites 'Microsoft.Network/privateDnsZones@2020-06-01' existing = {
   name: privateZoneNameSites
 }

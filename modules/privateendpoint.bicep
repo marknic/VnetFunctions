@@ -2,7 +2,6 @@ param privateEndpointName string
 param vnetName string
 param subnetName string
 param serviceId string
-param tags object
 
 @allowed([
   'file'
@@ -12,6 +11,13 @@ param tags object
   'sites'
 ])
 param groupId string
+
+@description('list of standard resource tags')
+param tags object = {}
+
+//
+// Resources
+//
 
 // -- Private Endpoints --
 resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-02-01' = {

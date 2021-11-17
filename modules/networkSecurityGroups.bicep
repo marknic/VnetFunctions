@@ -1,8 +1,16 @@
 param location string = resourceGroup().location
 
+@description('list of standard resource tags.')
+param tags object = {}
+
+//
+// Resources
+//
+
 resource nsgVM 'Microsoft.Network/networkSecurityGroups@2020-06-01' = {
   name: 'nsgVmStandard'
   location: location
+  tags: tags
   properties: {
     securityRules: [
       {
@@ -38,12 +46,14 @@ resource nsgVM 'Microsoft.Network/networkSecurityGroups@2020-06-01' = {
 resource nsgDefault 'Microsoft.Network/networkSecurityGroups@2020-06-01' = {
   name: 'nsgDefault'
   location: location
+  tags: tags
 }
 
 
 resource nsgBastion 'Microsoft.Network/networkSecurityGroups@2020-06-01' = {
   name: 'nsgBastion'
   location: location
+  tags: tags
   properties: {
     securityRules: [
       {

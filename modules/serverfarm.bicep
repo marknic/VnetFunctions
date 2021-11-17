@@ -1,8 +1,11 @@
+@description('Name of the App Service Plan to be created.')
 param appServicePlanName string
 
 @description('Region (datacenter) where this resource is to be deployed')
-param location string
-param tags object
+param location string = resourceGroup().location
+
+@description('list of standard resource tags')
+param tags object = {}
 
 @description('The name/size of the compute to use for the Functions using this App Service Plan.')
 @allowed([
@@ -15,13 +18,17 @@ param skuSizeName string
 @description('The number of instances this plan can scale to under load.')
 param maximumElasticWorkerCount int = 20
 
-param perSiteScaling bool = false
-
 @description('The number of instances allocated to your plan. It is the count of the always ready instances in this plan.')
 param capacity int = 1
 
 @description('Value should be true if the OS is Linux.')
 param isLinux bool
+
+param perSiteScaling bool = false
+
+//
+// Resources
+//
 
 resource appPlan 'Microsoft.Web/serverfarms@2020-12-01' = {
   name: appServicePlanName

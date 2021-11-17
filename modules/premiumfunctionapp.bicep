@@ -2,7 +2,7 @@
 param functionAppName string
 
 @description('Region (datacenter) where this resource is to be deployed')
-param location string
+param location string = resourceGroup().location
 
 @description('Set to true is the Function App OS is Linux.')
 param isLinux bool
@@ -10,8 +10,8 @@ param isLinux bool
 @description('Does this Function App use Containers: true if it does.')
 param useContainers bool = false
 
-@description('Resource tags for this Function App.')
-param tags object
+@description('list of standard resource tags.')
+param tags object = {}
 
 @description('The name of the App Service Plan for this Function App.')
 param appServicePlanName string
@@ -48,13 +48,7 @@ param minimumElasticInstanceCount int = 3
 
 param functionAppScaleLimit int = 20
 
-// Variables
-var runtimeSplit = split(runtime, '/')
-var workerRuntime = runtimeSplit[0]
-
 param functionContentShareName string
-
-var linuxOS = useContainers ? true : isLinux
 
 @allowed([
   'None'
@@ -63,6 +57,21 @@ var linuxOS = useContainers ? true : isLinux
   'UserAssigned'
 ])
 param identityType string = 'SystemAssigned'
+
+
+//
+// Variables
+//
+
+var runtimeSplit = split(runtime, '/')
+
+var workerRuntime = runtimeSplit[0]
+
+var linuxOS = useContainers ? true : isLinux
+
+//
+// Resources
+//
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' existing = {
   name: vnetName

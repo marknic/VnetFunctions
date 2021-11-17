@@ -1,7 +1,10 @@
 
 
-param tags object
-param virtualNetworkId string
+@description('list of standard resource tags.')
+param tags object = {}
+
+@description('Name of the VNET.')
+param vnetName string
 
 @description('The name of the resource the private endpoint is being created for.')
 param privateResourceName string
@@ -13,8 +16,21 @@ param privateResourceName string
 ])
 param zoneType string
 
+//
+// Variables
+//
+
+
+var subscriptionId = subscription().subscriptionId
+var resourceGroupName = resourceGroup().name
+
+var idBase = '/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers'
+var vnetId = '${idBase}/Microsoft.Network/virtualNetworks/${vnetName}'
+
 var privateDnsZoneName = zoneType == 'blob' ? 'privatelink.blob.${environment().suffixes.storage}' : zoneType == 'file' ? 'privatelink.file.${environment().suffixes.storage}' : 'privatelink.azurewebsites.net'
 var privateZoneLinkName = '${privateResourceName}-${zoneType}-link'
+
+
 
 // -- Private DNS Zones --
 resource dnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
@@ -31,12 +47,11 @@ resource storageFileDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetwor
   properties: {
     registrationEnabled: false
     virtualNetwork: {
-      id: virtualNetworkId
+      id: vnetId
     }
   }
   tags: tags
 }
-
 
 output privateDnsZoneName string = privateDnsZoneName
 output privateZoneLinkName string = privateZoneLinkName

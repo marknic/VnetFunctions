@@ -1,5 +1,7 @@
 param vnetName string
-param tags object
+
+@description('list of standard resource tags.')
+param tags object = {}
 
 param addressPrefix string = '10.0.0.0/16'
 

@@ -1,7 +1,8 @@
+@description('Name of the storage account to create.')
 param storageAccountName string
 
 @description('The location into which the resources should be deployed.')
-param location string
+param location string = resourceGroup().location
 
 @allowed([
   'BlobStorage'
@@ -26,7 +27,11 @@ param kind string = 'StorageV2'
 param storageAccountSku string = 'Standard_ZRS'
 
 @description('list of standard resource tags')
-param tags object
+param tags object = {}
+
+//
+// Resources
+//
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   name: storageAccountName

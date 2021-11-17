@@ -31,7 +31,7 @@ if ($(az group exists --name $resourceGroupName) -eq $false) {
 }
 
 # Deploy the main.bicep template
-$deployResult = $(az deployment group create -g $resourceGroupName --template-file '.\mainNetwork.bicep' --parameters $parameterFileOut)
+$deployResult = $(az deployment group create -g $resourceGroupName --template-file '.\createTestNetwork.bicep' --parameters $parameterFileOut)
 
 if (!$?) {
   Write-Error "Error deploying the main.bicep template.  Exiting"

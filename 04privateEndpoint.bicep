@@ -24,8 +24,19 @@ param groupId string
 @description('Zone ID created for this Private Endpoint.')
 param zoneId string
 
+//
+// Variables
+//
+
 var privateEndpointName = '${privateResourceName}-${groupId}-private-endpoint'
+
 var privateEndpointResName = '${privateResourceName}ep'
+
+var zoneResName = 'zoneGroup${groupId}'
+
+//
+// Resources
+//
 
 module endpoint 'modules/privateendpoint.bicep' = {
   name: privateEndpointResName
@@ -39,8 +50,6 @@ module endpoint 'modules/privateendpoint.bicep' = {
   }
 }
 
-var zoneResName = 'zoneGroup${groupId}'
-
 module privateEndpointDnsZoneGroup 'modules/dnsZoneGroup.bicep' = {
   name: zoneResName
   params: {
@@ -52,20 +61,6 @@ module privateEndpointDnsZoneGroup 'modules/dnsZoneGroup.bicep' = {
     endpoint
   ]
 }
-
-// Get the existing private endpoint information
-// resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-02-01' existing = {
-//   name: privateEndpointName
-// }
-
-// Grab the ID of the network interface (NIC) used by the private endpoint
-//var nicId = first(privateEndpoint.properties.networkInterfaces).id
-
-// var nicName = substring(nicId, lastIndexOf(nicId, '/') + 1)
-
-// resource privateEndpointNic 'Microsoft.Network/networkInterfaces@2021-02-01' existing = {
-//   name: nicName
-// }
 
 // Go get the information from the NIC
 module nicInfo 'modules/data/networkInterfaceProperties.bicep' = {

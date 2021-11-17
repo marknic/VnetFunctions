@@ -35,55 +35,6 @@
     "appName":{
       "value": "privatefunc"
     },
-    "subnets": {
-      "value": [
-        {
-          "name": "sn-util-0-0-24",
-          "properties": {
-            "addressPrefix": "10.4.0.0/24",
-            "nsg": "nsgDefault"
-          }
-        },
-        {
-          "name": "sn-vm-1-0-24",
-          "properties": {
-            "addressPrefix": "10.4.1.0/24",
-            "nsg": "nsgVmStandard"
-          }
-        },
-        {
-          "name": "sn-pep-2-0-24",
-          "properties": {
-            "addressPrefix": "10.4.2.0/24",
-            "privateLinkServiceNetworkPolicies": "Disabled",
-            "privateEndpointNetworkPolicies": "Disabled",
-            "networkSecurityGroup": "nsgDefault"
-          }
-        },
-        {
-          "name": "sn-func-3-0-27-d",
-          "properties": {
-            "addressPrefix": "10.4.3.0/27",
-            "delegations": [
-              {
-                "name": "delegation",
-                "properties": {
-                  "serviceName": "Microsoft.Web/serverFarms"
-                }
-              }
-            ],
-            "nsg": "nsgDefault"
-          }
-        },
-        {
-          "name": "AzureBastionSubnet",
-          "properties": {
-            "addressPrefix": "10.4.4.0/27",
-            "nsg": "nsgBastion"
-          }
-        }
-      ]
-    },
     "functionSubnetName":{
       "value": "sn-func-3-0-27-d"
     },
